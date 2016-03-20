@@ -12,6 +12,8 @@ end
 
 BACKGROUNDS = format_array(%w(arland corval hise jiyel revaire wellin))
 
+BACKGROUNDS_SHORT = %w(a c h j r w)
+
 SKILLS = format_array(%w(beauty intelligence charisma charm leadership courage cunning manipulation eloquence etiquette self-defense poise grace))
 
 FLAWS = format_array(%w(beauty intelligence charisma charm leadership courage eloquence grace))
@@ -34,6 +36,23 @@ TRAITS = format_hash(  {  empathy: %w(compassionate indifferent),
                           interaction_style: %w(introverted social),
                           rationality: %w(logical emotional),
                           ethics: %w(immoral ethical)                  }  )
+
+BACKGROUND_METHODS = ["Enter 'P' to choose your background.", "Enter 'R' for a random background."]
+
+BACKGROUND_MENU = [  "Enter 'A' for Arland.",
+                     "Enter 'C' for Corval.",
+                     "Enter 'H' for Hise.",
+                     "Enter 'J' for Jiyel.",
+                     "Enter 'R' for Revaire.",
+                     "Enter 'W' for Wellin."    ]
+
+BACKGROUND_KEYS = {}
+
+BACKGROUNDS.each do | background |
+  BACKGROUNDS_SHORT.each do | letter |
+    BACKGROUND_KEYS[letter] = background if BACKGROUNDS.index(background) == BACKGROUNDS_SHORT.index(letter)
+  end
+end
 
 def template_corval(mc)
   block = KNOWLEDGE.select { | block, subject | subject.include?("Politics") }.keys.sample
@@ -91,6 +110,10 @@ def invalid_option?(item, banned_field)
   banned_field.include?(item)
 end
 
+def exclusive_strengths(mc, strength, banned_strength)
+  mc[:banned_strengths] << banned_strength if strength
+end
+
 def randomize_approval(mc)
   mc[:approval] = APPROVAL.sample if mc[:background] != "Arland"
 end
@@ -114,8 +137,8 @@ def randomize_strengths(mc)
   until new_strengths == 5
     begin
       strength = SKILLS.sample
-      mc[:banned_strengths] << "Grace" if strength == "Poise"
-      mc[:banned_strengths] << "Poise" if strength == "Grace"
+    exclusive_strengths(mc, "Grace", "Poise")
+    exclusive_strengths(mc, "Poise", "Grace")
     end while invalid_option?(strength, mc[:banned_strengths]) || mc[:strengths].include?(strength)
     mc[:strengths] << strength
     new_strengths += 1
@@ -158,7 +181,44 @@ def show_profile(mc)
   puts "Traits: #{mc[:traits].values}"
 end
 
-puts "Let's generate a random MC!"
+def list_options(list)
+  list.each { | item | puts "- #{item}" }
+end
+
+def correct_input?(input, input_array)
+  input_array.include?(input.downcase)
+end
+
+def get_background_input
+  begin
+    list_options(BACKGROUND_MENU)
+    input = gets.chomp
+  end until correct_input?(input, %w(a c h j r w))
+  input.downcase
+end
+
+def match_background_input(mc, input)
+  mc[:background] = BACKGROUND_KEYS[input]
+end
+
+def choose_background(mc)
+  input = get_background_input
+  match_background_input(mc, input)
+  set_background_templates(mc)
+end
+
+def background_method(mc, input)
+  choose_background(mc) if input == "p"
+  randomize_full_mc(mc) if input == "r"
+end
+
+puts "Welcome to Mimi's MC Generator! - Would you like a random background, or to pick your own?"
+begin
+  list_options(BACKGROUND_METHODS)
+  input = gets.chomp
+end until correct_input?(input, %w(p r))
+input = input.downcase
+
 mc = {  strengths: [],
         flaws: [],
         knowledge: {},
@@ -167,7 +227,8 @@ mc = {  strengths: [],
         banned_flaws: ["Charisma"],
         banned_knowledge: [],
         banned_traits: {}      }
-randomize_full_mc(mc)
+
+background_method(mc, input)
 show_profile(mc)
 
 
