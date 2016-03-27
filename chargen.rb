@@ -1,5 +1,5 @@
 def format_array(array)
-  array.sort.map { |string| string.split("-").map { | word | word == "and" ? word : word.capitalize }.join(" ") }
+  array.sort.map { | string | string.split("-").map { | word | word == "and" ? word : word.capitalize }.join(" ") }
 end
 
 def format_hash(hash)
@@ -17,6 +17,15 @@ BACKGROUNDS_SHORT = %w(a c h j r w)
 SKILLS = format_array(%w(beauty intelligence charisma charm leadership courage cunning manipulation eloquence etiquette self-defense poise grace))
 
 FLAWS = format_array(%w(beauty intelligence charisma charm leadership courage eloquence grace))
+
+SKILLS_BASE = {}
+
+SKILLS_ZERO = %w(cunning manipulation self-defense)
+
+SKILLS.each do | skill |
+  SKILLS_BASE[skill] = 25
+  SKILLS_BASE[skill] = 0 if SKILLS_ZERO.include?(skill)
+end
 
 KNOWLEDGE = format_hash( {  1 => %w(history politics warfare academics),
                             2 => %w(street-smarts practical people flora-and-fauna),
@@ -52,6 +61,20 @@ BACKGROUNDS.each do | background |
   BACKGROUNDS_SHORT.each do | letter |
     BACKGROUND_KEYS[letter] = background if BACKGROUNDS.index(background) == BACKGROUNDS_SHORT.index(letter)
   end
+end
+
+QUESTIONS = {  born: format_array(%w(beauty intelligence charisma charm)),
+               bandits: format_array(%w(leadership courage cunning manipulation)),
+               best_subject: format_array(%w(eloquence etiquette intelligence beauty)),
+               defense: ["Self Defense", "Etiquette", "Manipulation"],
+               intelligence: format_array(%w(intelligence manipulation courage charm)),
+               mob: format_array(%w(poise grace cunning eloquence))
+             }
+
+ORIENTATIONS = format_array(%w(girls boys girls-and-boys asexual/aromantic fluid))
+
+def randomize_orientation(mc)
+  mc[:orientation] = ORIENTATIONS.sample
 end
 
 def template_corval(mc)
@@ -165,6 +188,7 @@ end
 
 def randomize_full_mc(mc)
   randomize_background(mc)
+  randomize_orientation(mc)
   randomize_approval(mc)
   randomize_flaws(mc)
   randomize_strengths(mc)
@@ -174,6 +198,7 @@ end
 
 def show_profile(mc)
   puts "Background: #{mc[:background]}"
+  puts "Orientation: #{mc[:orientation]}"
   puts "Strengths: #{mc[:strengths]}"
   puts "Approval: #{mc[:approval]}"
   puts "Weaknessess: #{mc[:flaws]}"
@@ -230,13 +255,4 @@ mc = {  strengths: [],
 
 background_method(mc, input)
 show_profile(mc)
-
-
-
-
-
-
-
-
-
 
