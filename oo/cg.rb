@@ -23,7 +23,6 @@ end
 class Background
   include Selecting
   attr_reader :country
-  attr_accessor :required
 
   COUNTRIES = %w(arland corval hise jiyel revaire wellin).map(&:capitalize)
   COUNTRIES_HASH = {}
@@ -74,34 +73,116 @@ class Background
   end
 end
 
-class ArlandPrincess
+class Stat
+  attr_reader :name
+
+  def initialize(name)
+    @name = name
+  end
 end
 
-class CorvalLady
+class Skill < Stat
+  SKILLS = %w(Charm Eloquence Beauty Leadership Self-Defense Charisma Manipulation Courage Intelligence Etiquette Grace Poise Cunning)
+  SKILLS.each { |skill| skill.gsub!("-", " ") }.freeze
+
+  def initialize(name)
+    super
+    @score = start_score_zero?(name) ? 0 : 25
+  end
+
+  def start_score_zero?(name)
+    ["Self Defense", "Manipulation", "Cunning"].include?(name)
+  end
+end 
+
+class Knowledge < Stat
+  SUBJECTS = %w(History Politics Street-Smarts Warfare Practical Academic People Flora-and-Fauna)
+  SUBJECTS.each { |subject| subject.gsub!("-", " ") }.freeze
+
+  def initialize(name)
+    super
+    @value = 0
+  end
 end
 
-class HisePirate
+class Trait < Stat
+  def initialize(name)
+    @value = 0
+  end
 end
-
-class JiyelScholar
-end
-
-class RevaireWidow
-end
-
-class WellinCountess
-end
-
 
 class Character
+  def initialize
+    base_skills
+    base_knowledge
+  end
+
+  def base_skills
+    @skills = {}
+    Skill::SKILLS.each { |skill| @skills[skill] = Skill.new(skill) }
+  end
+
+  def base_knowledge
+    @knowledge = {}
+    Knowledge::SUBJECTS.each { |subject| @knowledge[subject] = Knowledge.new(subject) }
+  end
+end
+
+class ArlandPrincess < Character
+  def initialize
+    super
+    @role = "Sheltered Princess"
+  end
+end
+
+class CorvalLady < Character
+  def initialize
+    super
+    @role = "Court Lady"
+  end
+end
+
+class HisePirate < Character
+  def initialize
+    super
+    @role = "Pirate Captain"
+  end
+end
+
+class JiyelScholar < Character
+  def initialize
+    super 
+    @role = "Minor Scholar"
+  end
+end
+
+class RevaireWidow < Character
+  def initialize
+    super
+    @role = "Ambitious Widow"
+  end
+end
+
+class WellinCountess < Character
+  def initialize
+    super
+    @role = "Tomboy Countess"
+  end
+end
+
+class Generator
   attr_reader :background
 
   def initialize
     @background = Background.new
-    @stats = base_stats
+    @character = character
   end
 
-  def base_stats
+  def country
+    background.country
+  end
+
+  def character
     return ArlandPrincess.new if arland?
     return CorvalLady.new if corval?
     return HisePirate.new if hise?
@@ -111,28 +192,28 @@ class Character
   end
 
   def arland?
-    background.country == "Arland"
+    country == "Arland"
   end
 
   def corval?
-    background.country == "Corval"
+    country == "Corval"
   end
 
   def hise?
-    background.country == "Hise"
+    country == "Hise"
   end
 
   def jiyel?
-    background.country == "Jiyel"
+    country == "Jiyel"
   end
 
   def revaire?
-    background.country == "Revaire"
+    country == "Revaire"
   end
 
   def wellin?
-    background.country == "Wellin"
+    country == "Wellin"
   end
 end
 
-Character.new
+Generator.new
